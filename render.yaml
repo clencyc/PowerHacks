@@ -44,11 +44,11 @@ services:
       - key: MAX_REPORTS_PER_USER_PER_DAY
         value: 10
 
-  - type: worker
+  - type: web
     name: safespace-slack-bot
     env: python
     region: oregon
-    plan: starter
+    plan: free
     buildCommand: cd apps/slack && pip install -r requirements.txt
     startCommand: cd apps/slack && python app.py
     envVars:

@@ -587,11 +587,44 @@ def handle_app_mention(event, say):
         say("I'm having trouble right now. Please use `/gbv-help` or call 0709 558 000 for immediate support.")
 
 if __name__ == "__main__":
+    import threading
+    from flask import Flask
+    
+    # Create Flask app for health checks
+    flask_app = Flask(__name__)
+    
+    @flask_app.route('/')
+    def health_check():
+        return {
+            "status": "healthy",
+            "service": "SafeSpace AI Slack Bot",
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    @flask_app.route('/health')
+    def health():
+        return {"status": "ok", "bot": "running"}
+    
     try:
-        handler = SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
-        logger.info("🚀 SafeSpace AI Slack Bot starting...")
-        handler.start()
+        # Start Slack bot in a separate thread
+        def start_slack_bot():
+            try:
+                handler = SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
+                logger.info("🚀 SafeSpace AI Slack Bot starting...")
+                handler.start()
+            except Exception as e:
+                logger.error(f"Slack bot error: {e}")
+        
+        # Start Slack bot in background thread
+        slack_thread = threading.Thread(target=start_slack_bot, daemon=True)
+        slack_thread.start()
+        
+        # Start Flask server on the port Render expects
+        port = int(os.environ.get("PORT", 10000))
+        logger.info(f"🌐 Starting web server on port {port}")
+        flask_app.run(host="0.0.0.0", port=port, debug=False)
+        
     except KeyboardInterrupt:
         logger.info("👋 SafeSpace AI Slack Bot stopping...")
     except Exception as e:
-        logger.error(f"Failed to start bot: {e}")
+        logger.error(f"Failed to start services: {e}")
