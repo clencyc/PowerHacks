@@ -34,6 +34,9 @@ from rag import rag_service
 app = App(
     token=os.environ["SLACK_BOT_TOKEN"],
     signing_secret=os.environ["SLACK_SIGNING_SECRET"],
+    # Disable OAuth for single workspace
+    installation_store=None,
+    authorize=None
 )
 
 # API endpoint for reports
