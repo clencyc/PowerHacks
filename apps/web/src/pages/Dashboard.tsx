@@ -3,38 +3,61 @@ import { Button } from "@/components/ui/button";
 import StatCard from "@/components/dashboard/StatCard";
 import ReportsTable from "@/components/dashboard/ReportsTable";
 import CategoryChart from "@/components/dashboard/CategoryChart";
+import { useEffect, useState } from "react";
+import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
-  const stats = [
-    {
-      title: "Total Reports",
-      value: "47",
-      icon: Shield,
-      gradient: "from-primary to-accent",
-      trend: "+12 this week",
-    },
-    {
-      title: "Active Cases",
-      value: "8",
-      icon: AlertTriangle,
-      gradient: "from-orange-400 to-red-400",
-      trend: "Requires attention",
-    },
-    {
-      title: "Resolved",
-      value: "35",
-      icon: CheckCircle,
-      gradient: "from-green-400 to-teal-400",
-      trend: "74% resolution rate",
-    },
-    {
-      title: "Avg Response",
-      value: "4.2h",
-      icon: Clock,
-      gradient: "from-purple-400 to-pink-400",
-      trend: "Within SLA",
-    },
-  ];
+  const [stats, setStats] = useState([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.analytics}`);
+        const data = await response.json();
+        const statsData = [
+          {
+            title: "Total Reports",
+            value: data.total_reports,
+            icon: Shield,
+            gradient: "from-primary to-accent",
+            trend: `${data.new_reports_this_week} this week`,
+          },
+          {
+            title: "Active Cases",
+            value: data.active_cases,
+            icon: AlertTriangle,
+            gradient: "from-orange-400 to-red-400",
+            trend: "Requires attention",
+          },
+          {
+            title: "Resolved",
+            value: data.resolved_cases,
+            icon: CheckCircle,
+            gradient: "from-green-400 to-teal-400",
+            trend: `${data.resolution_rate}% resolution rate`,
+          },
+          {
+            title: "Avg Response",
+            value: data.avg_response_time_hours !== undefined && data.avg_response_time_hours !== null ? `${data.avg_response_time_hours}h` : "N/A",
+            icon: Clock,
+            gradient: "from-purple-400 to-pink-400",
+            trend: "Within SLA",
+          },
+        ];
+        setStats(statsData);
+      } catch (error) {
+        console.error("Error fetching analytics:", error);
+      }
+    };
+
+    fetchAnalytics();
+  }, []);
+
+  const handleLogout = () => {
+    navigate("/", { replace: true });
+  };
 
   return (
     <div className="min-h-screen">
@@ -46,13 +69,14 @@ const Dashboard = () => {
               🌸
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground">Haven</h1>
+              <h1 className="text-xl font-bold text-foreground">SafeSpace AI</h1>
               <p className="text-xs text-muted-foreground">Admin Dashboard</p>
             </div>
           </div>
           <Button 
             variant="outline" 
             className="rounded-xl glass-card border-white/40 hover:bg-white/60"
+            onClick={handleLogout}
           >
             Logout
           </Button>

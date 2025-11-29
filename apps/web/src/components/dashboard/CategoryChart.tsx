@@ -1,12 +1,38 @@
 import { Card } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
 
 const CategoryChart = () => {
-  const categories = [
-    { name: "Harassment", count: 18, color: "bg-primary", percentage: 38 },
-    { name: "Discrimination", count: 12, color: "bg-accent", percentage: 26 },
-    { name: "Verbal Abuse", count: 9, color: "bg-orange-400", percentage: 19 },
-    { name: "Bullying", count: 8, color: "bg-pink-400", percentage: 17 },
-  ];
+  const [categories, setCategories] = useState([]);
+  const [totalReports, setTotalReports] = useState(0);
+
+  const categoryColors = {
+    Harassment: "bg-primary",
+    Discrimination: "bg-accent",
+    "Verbal Abuse": "bg-orange-400",
+    Bullying: "bg-pink-400",
+  };
+
+  useEffect(() => {
+    const fetchChartData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.analytics}`);
+        const data = await response.json();
+        const categoryData = Object.entries(data.category_distribution).map(([name, count]) => ({
+          name,
+          count,
+          percentage: (count / data.total_reports) * 100,
+          color: categoryColors[name] || "bg-gray-400",
+        }));
+        setCategories(categoryData);
+        setTotalReports(data.total_reports);
+      } catch (error) {
+        console.error("Error fetching chart data:", error);
+      }
+    };
+
+    fetchChartData();
+  }, []);
 
   return (
     <Card className="glass-card rounded-3xl p-6 h-full">
@@ -28,14 +54,16 @@ const CategoryChart = () => {
                 style={{ width: `${category.percentage}%` }}
               />
             </div>
-            <p className="text-xs text-muted-foreground mt-1">{category.percentage}% of total</p>
+            <p className="text-xs text-muted-foreground mt-1">{category.percentage.toFixed(0)}% of total</p>
           </div>
         ))}
       </div>
 
       <div className="mt-8 pt-6 border-t border-border/30">
         <div className="text-center">
-          <p className="text-2xl font-bold text-foreground mb-1">47</p>
+          <p className="text-2xl font-bold text-foreground mb-1">
+            {totalReports}
+          </p>
           <p className="text-xs text-muted-foreground">Total Reports This Month</p>
         </div>
       </div>

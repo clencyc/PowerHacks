@@ -13,7 +13,7 @@ const Login = () => {
     e.preventDefault();
     if (password === "haven2025") {
       toast({
-        title: "Welcome to Haven",
+        title: "Welcome to SafeSpace AI",
         description: "You're now in a safe space.",
       });
       navigate("/dashboard");
@@ -33,7 +33,7 @@ const Login = () => {
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl gradient-primary mb-4 text-4xl">
             🌸
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Haven</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">SafeSpace AI</h1>
           <p className="text-muted-foreground">A safe space for everyone</p>
         </div>
 
@@ -50,7 +50,6 @@ const Login = () => {
               onChange={(e) => setPassword(e.target.value)}
               className="h-12 rounded-2xl glass-card border-white/40"
             />
-            <p className="text-xs text-muted-foreground">Hint: haven2025</p>
           </div>
 
           <Button 

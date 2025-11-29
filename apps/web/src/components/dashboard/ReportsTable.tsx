@@ -2,15 +2,25 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import { useEffect, useState } from "react";
+import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
 
 const ReportsTable = () => {
-  const reports = [
-    { id: "#R047", type: "Harassment", status: "Active", date: "2025-11-28", priority: "High" },
-    { id: "#R046", type: "Discrimination", status: "Active", date: "2025-11-27", priority: "Medium" },
-    { id: "#R045", type: "Verbal Abuse", status: "Resolved", date: "2025-11-26", priority: "Low" },
-    { id: "#R044", type: "Harassment", status: "Resolved", date: "2025-11-25", priority: "High" },
-    { id: "#R043", type: "Bullying", status: "Active", date: "2025-11-24", priority: "Medium" },
-  ];
+  const [reports, setReports] = useState([]);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.reports}`);
+        const data = await response.json();
+        setReports(data);
+      } catch (error) {
+        console.error("Error fetching reports:", error);
+      }
+    };
+
+    fetchReports();
+  }, []);
 
   const getStatusColor = (status: string) => {
     return status === "Active" 
@@ -65,23 +75,31 @@ const ReportsTable = () => {
             </tr>
           </thead>
           <tbody>
-            {reports.map((report) => (
-              <tr key={report.id} className="border-b border-border/20 hover:bg-white/30 transition-colors">
-                <td className="py-4 px-2 text-sm font-medium text-foreground">{report.id}</td>
-                <td className="py-4 px-2 text-sm text-foreground">{report.type}</td>
-                <td className="py-4 px-2">
-                  <Badge className={`rounded-xl ${getStatusColor(report.status)}`}>
-                    {report.status}
-                  </Badge>
-                </td>
-                <td className="py-4 px-2 text-sm text-muted-foreground">{report.date}</td>
-                <td className="py-4 px-2">
-                  <Badge className={`rounded-xl ${getPriorityColor(report.priority)}`}>
-                    {report.priority}
-                  </Badge>
+            {Array.isArray(reports) && reports.length > 0 ? (
+              reports.map((report) => (
+                <tr key={report.id} className="border-b border-border/20 hover:bg-white/30 transition-colors">
+                  <td className="py-4 px-2 text-sm font-medium text-foreground">{report.id}</td>
+                  <td className="py-4 px-2 text-sm text-foreground">{report.report_type}</td>
+                  <td className="py-4 px-2">
+                    <Badge className={`rounded-xl ${getStatusColor(report.status)}`}>
+                      {report.status}
+                    </Badge>
+                  </td>
+                  <td className="py-4 px-2 text-sm text-muted-foreground">{new Date(report.timestamp).toLocaleDateString()}</td>
+                  <td className="py-4 px-2">
+                    <Badge className={`rounded-xl ${getPriorityColor(report.priority)}`}>
+                      {report.priority}
+                    </Badge>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="text-center py-4">
+                  No reports found.
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
