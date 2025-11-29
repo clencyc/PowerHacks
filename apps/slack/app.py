@@ -31,12 +31,22 @@ except ImportError as e:
 from rag import rag_service
 
 # ── CORRECT SLACK APP CONFIGURATION FOR HTTP MODE ──
+# Remove OAuth/Client credentials that cause multi-workspace mode
+slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
+slack_signing_secret = os.environ["SLACK_SIGNING_SECRET"]
+
+logger.info(f"🔧 Configuring Slack app with token: {slack_bot_token[:12]}...")
+
 app = App(
-    token=os.environ["SLACK_BOT_TOKEN"],
-    signing_secret=os.environ["SLACK_SIGNING_SECRET"],
-    # Disable OAuth for single workspace
+    token=slack_bot_token,
+    signing_secret=slack_signing_secret,
+    # Explicitly disable OAuth for single workspace mode
     installation_store=None,
-    authorize=None
+    authorize=None,
+    # Remove any OAuth settings
+    client_id=None,
+    client_secret=None,
+    oauth_settings=None
 )
 
 # API endpoint for reports
@@ -616,7 +626,17 @@ def health_check():
 # Slack events endpoint
 @flask_app.route("/slack/events", methods=["GET", "POST"])
 def slack_events():
-    return handler.handle(request)
+    logger.info(f"📨 Received {request.method} request to /slack/events")
+    if request.method == "POST":
+        logger.info(f"📋 Request data preview: {str(request.get_json())[:200]}...")
+    
+    try:
+        response = handler.handle(request)
+        logger.info(f"✅ Successfully handled Slack event")
+        return response
+    except Exception as e:
+        logger.error(f"❌ Error handling Slack event: {e}")
+        return {"error": str(e)}, 500
 
 # ── All your existing @app.event, @app.command, etc. are already registered above ──
 
