@@ -95,7 +95,7 @@ const ReportsTable = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="5" className="text-center py-4">
+                <td colSpan={5} className="text-center py-4">
                   No reports found.
                 </td>
               </tr>

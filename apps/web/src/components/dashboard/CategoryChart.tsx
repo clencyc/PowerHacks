@@ -20,8 +20,8 @@ const CategoryChart = () => {
         const data = await response.json();
         const categoryData = Object.entries(data.category_distribution).map(([name, count]) => ({
           name,
-          count,
-          percentage: (count / data.total_reports) * 100,
+          count: Number(count),
+          percentage: (Number(count) / data.total_reports) * 100,
           color: categoryColors[name] || "bg-gray-400",
         }));
         setCategories(categoryData);
