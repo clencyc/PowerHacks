@@ -3,6 +3,22 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
 import os
+import sys
+from pathlib import Path
+
+# Add the current directory to Python path for imports
+current_dir = Path(__file__).parent
+sys.path.insert(0, str(current_dir))
+
+from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer
+
+# Import routers using absolute imports from current directory
+from routers import reports, analytics
+from database import get_db, init_db
+from models import ReportCreate, ReportResponse
+
 from datetime import datetime
 
 from routers import reports, analytics, detection
@@ -27,7 +43,7 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -82,7 +98,7 @@ app.include_router(
 
 # Root endpoints
 @app.get("/")
-def read_root():
+async def read_root():
     """Welcome message and API info"""
     return {
         "message": "Welcome to SafeSpace AI API",
@@ -99,7 +115,7 @@ def read_root():
     }
 
 @app.get("/health")
-def health_check():
+async def health_check():
     """System health check"""
     return {
         "status": "healthy",
@@ -141,3 +157,7 @@ def api_info():
             "GDPR compliance"
         ]
     }
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
