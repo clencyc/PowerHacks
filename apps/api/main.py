@@ -56,12 +56,18 @@ async def global_exception_handler(request: Request, exc: Exception):
 async def startup_event():
     """Initialize database and services on startup"""
     try:
-        create_db_and_tables()
-        logger.info("🗄️ Database initialized successfully")
+        # Only create tables if DATABASE_URL is properly configured
+        database_url = os.getenv("DATABASE_URL")
+        if database_url and "localhost" not in database_url:
+            create_db_and_tables()
+            logger.info("🗄️ Database initialized successfully")
+        else:
+            logger.warning("⚠️ Database not configured or using localhost - skipping table creation")
         logger.info("🚀 SafeSpace AI API started successfully")
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
-        raise
+        # Don't crash the app if database fails to initialize
+        logger.warning("⚠️ Continuing without database initialization")
 
 @app.on_event("shutdown")
 async def shutdown_event():
