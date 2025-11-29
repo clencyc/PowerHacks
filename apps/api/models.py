@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from sqlmodel import Field, SQLModel, JSON, Column
+from sqlmodel import Field, SQLModel
 from pydantic import BaseModel
 from enum import Enum
+import json
 
 # ENUMS
 class IncidentStatus(str, Enum):
@@ -31,8 +32,8 @@ class ReportBase(SQLModel):
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     status: IncidentStatus = Field(default=IncidentStatus.PENDING)
     severity: Optional[IncidentSeverity] = Field(default=None)
-    categories: List[str] = Field(default=[], sa_column=Column(JSON))
-    metadata: Dict[str, Any] = Field(default={}, sa_column=Column(JSON))
+    categories: Optional[str] = Field(default="[]", description="JSON string of categories")
+    report_metadata: Optional[str] = Field(default="{}", description="JSON string of metadata")
 
 class Report(ReportBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -40,6 +41,28 @@ class Report(ReportBase, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     reviewed_by: Optional[str] = Field(default=None)
     review_notes: Optional[str] = Field(default=None)
+    
+    def get_categories(self) -> List[str]:
+        """Get categories as a list"""
+        try:
+            return json.loads(self.categories or "[]")
+        except:
+            return []
+    
+    def set_categories(self, categories: List[str]):
+        """Set categories from a list"""
+        self.categories = json.dumps(categories)
+    
+    def get_metadata(self) -> Dict[str, Any]:
+        """Get metadata as a dict"""
+        try:
+            return json.loads(self.report_metadata or "{}")
+        except:
+            return {}
+    
+    def set_metadata(self, metadata: Dict[str, Any]):
+        """Set metadata from a dict"""
+        self.report_metadata = json.dumps(metadata)
 
 class ReportCreate(ReportBase):
     pass
@@ -114,8 +137,19 @@ class AuditLog(SQLModel, table=True):
     action: str = Field(index=True)
     user_id: Optional[str] = None
     report_id: Optional[int] = None
-    details: Dict[str, Any] = Field(default={}, sa_column=Column(JSON))
+    details: Optional[str] = Field(default="{}", description="JSON string of details")
     timestamp: datetime = Field(default_factory=datetime.utcnow, index=True)
+    
+    def get_details(self) -> Dict[str, Any]:
+        """Get details as a dict"""
+        try:
+            return json.loads(self.details or "{}")
+        except:
+            return {}
+    
+    def set_details(self, details: Dict[str, Any]):
+        """Set details from a dict"""
+        self.details = json.dumps(details)
 
 # SYSTEM CONFIG
 class SystemConfig(SQLModel, table=True):

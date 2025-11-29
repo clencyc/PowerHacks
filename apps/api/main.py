@@ -1,26 +1,20 @@
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import logging
 import os
 import sys
+import logging
+import uvicorn
 from pathlib import Path
+from datetime import datetime
 
 # Add the current directory to Python path for imports
 current_dir = Path(__file__).parent
 sys.path.insert(0, str(current_dir))
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
 
 # Import routers using absolute imports from current directory
-from routers import reports, analytics
-from database import get_db, init_db
-from models import ReportCreate, ReportResponse
-
-from datetime import datetime
-
 from routers import reports, analytics, detection
 from database import create_db_and_tables
 
