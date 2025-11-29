@@ -15,19 +15,10 @@ class GBVDetector:
         self.perspective_api_key = os.environ.get("PERSPECTIVE_API_KEY")
         self.device = 0 if torch.cuda.is_available() else -1
         
-        # Initialize HuggingFace toxicity classifier
-        try:
-            self.toxicity_classifier = pipeline(
-                "text-classification",
-                model="unitary/toxic-bert",
-                device=self.device,
-                truncation=True,
-                max_length=512
-            )
-            logger.info("Loaded toxic-bert model successfully")
-        except Exception as e:
-            logger.warning(f"Failed to load toxic-bert: {e}. Using fallback.")
-            self.toxicity_classifier = None
+        # Initialize lightweight toxicity classifier (lazy loading)
+        self.toxicity_classifier = None
+        self.model_loaded = False
+        logger.info("GBV Detector initialized (model will load on first use)")
         
         # GBV-specific keywords and patterns
         self.gbv_keywords = {
@@ -65,6 +56,25 @@ class GBVDetector:
             
         return scores
     
+    def _load_model(self):
+        """Lazy load the toxicity classifier when needed"""
+        if not self.model_loaded:
+            try:
+                from transformers import pipeline
+                self.toxicity_classifier = pipeline(
+                    "text-classification",
+                    model="unitary/toxic-bert",
+                    device=self.device,
+                    truncation=True,
+                    max_length=512
+                )
+                self.model_loaded = True
+                logger.info("Loaded toxic-bert model successfully")
+            except Exception as e:
+                logger.warning(f"Failed to load toxic-bert: {e}. Using keyword-only detection.")
+                self.toxicity_classifier = None
+                self.model_loaded = True
+
     def analyze_text(self, text: str, user_id: str = None, channel_type: str = "public") -> Dict[str, Any]:
         """
         Comprehensive GBV and toxicity analysis
@@ -112,7 +122,8 @@ class GBVDetector:
                 self.message_cache[msg_hash] = result
                 return result
             
-            # HuggingFace toxicity detection
+            # HuggingFace toxicity detection (lazy load)
+            self._load_model()
             if self.toxicity_classifier:
                 try:
                     hf_results = self.toxicity_classifier(text)

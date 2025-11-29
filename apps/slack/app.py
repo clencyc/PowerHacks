@@ -5,14 +5,22 @@ from datetime import datetime
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from dotenv import load_dotenv
-from detection import detector
-from rag import rag_service
-import requests
-from cryptography.fernet import Fernet
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+try:
+    # Try to use full detector with ML models
+    from detection import detector
+    logger.info("Using full ML-based GBV detector")
+except ImportError as e:
+    # Fallback to lightweight detector
+    logger.warning(f"ML libraries not available ({e}), using lightweight detector")
+    from detection_lite import detector
+from rag import rag_service
+import requests
+from cryptography.fernet import Fernet
 
 load_dotenv()
 

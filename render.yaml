@@ -48,7 +48,7 @@ services:
     name: safespace-slack-bot
     env: python
     region: oregon
-    plan: free
+    plan: starter
     buildCommand: cd apps/slack && pip install -r requirements.txt
     startCommand: cd apps/slack && python app.py
     envVars:
