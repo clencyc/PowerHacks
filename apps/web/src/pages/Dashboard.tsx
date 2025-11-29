@@ -1,4 +1,4 @@
-import { Shield, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { Shield, AlertTriangle, CheckCircle, Clock, PieChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StatCard from "@/components/dashboard/StatCard";
 import ReportsTable from "@/components/dashboard/ReportsTable";
@@ -44,6 +44,13 @@ const Dashboard = () => {
             icon: Clock,
             gradient: "from-purple-400 to-pink-400",
             trend: "Within SLA",
+          },
+          {
+            title: "High Priority",
+            value: data.high_priority_cases,
+            icon: PieChart,
+            gradient: "from-red-400 to-red-600",
+            trend: "Immediate action needed",
           },
         ];
         setStats(statsData);
@@ -96,7 +103,7 @@ const Dashboard = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           {stats.map((stat) => (
             <StatCard key={stat.title} {...stat} />
           ))}
