@@ -26,7 +26,9 @@ load_dotenv()
 
 app = App(
     token=os.environ.get("SLACK_BOT_TOKEN"),
-    signing_secret=os.environ.get("SLACK_SIGNING_SECRET")
+    signing_secret=os.environ.get("SLACK_SIGNING_SECRET"),
+    # Use HTTP mode instead of Socket Mode for production
+    process_before_response=True
 )
 
 # API endpoint for reports
@@ -606,18 +608,15 @@ if __name__ == "__main__":
         return {"status": "ok", "bot": "running"}
     
     try:
-        # Start Slack bot in a separate thread
-        def start_slack_bot():
-            try:
-                handler = SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
-                logger.info("🚀 SafeSpace AI Slack Bot starting...")
-                handler.start()
-            except Exception as e:
-                logger.error(f"Slack bot error: {e}")
+        # Add Slack routes to Flask app
+        @flask_app.route("/slack/events", methods=["POST"])
+        def slack_events():
+            from slack_bolt.adapter.flask import SlackRequestHandler
+            from flask import request
+            handler = SlackRequestHandler(app)
+            return handler.handle(request)
         
-        # Start Slack bot in background thread
-        slack_thread = threading.Thread(target=start_slack_bot, daemon=True)
-        slack_thread.start()
+        logger.info("🚀 SafeSpace AI Slack Bot configured for HTTP mode")
         
         # Start Flask server on the port Render expects
         port = int(os.environ.get("PORT", 10000))
