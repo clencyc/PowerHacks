@@ -29,6 +29,7 @@ app = App(
     signing_secret=os.environ.get("SLACK_SIGNING_SECRET"),
     # Use HTTP mode instead of Socket Mode for production
     process_before_response=True
+    ignore_authorize_error=True
 )
 
 # API endpoint for reports
