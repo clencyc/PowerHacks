@@ -10,7 +10,9 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     allowedHosts: ["powerhacks-2.onrender.com"],
   },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [react({
+    jsxRuntime: 'automatic'
+  }), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

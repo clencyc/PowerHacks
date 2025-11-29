@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: powerhacks-web
+    env: static
+    staticPublishPath: ./apps/web/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
