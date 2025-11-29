@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends
-from sqlmodel import Session, select
-from ..database import get_session
-from ..models import AnalyticsData
+from pymongo.database import Database # Import Database type
+from ..database import get_mongo_db
+from ..models import AnalyticsData # Still import AnalyticsData for type hinting if needed
 
 router = APIRouter()
 
 @router.get("/analytics/overview")
-def get_analytics_overview(session: Session = Depends(get_session)):
+def get_analytics_overview(db: Database = Depends(get_mongo_db)): # Changed dependency injection
     # Mock data for now, would aggregate from DB
     return {
         "total_reports": 150,

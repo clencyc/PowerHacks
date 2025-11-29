@@ -1,11 +1,18 @@
-from sqlmodel import SQLModel, create_engine, Session
+from pymongo import MongoClient
 from .core.config import settings
 
-engine = create_engine(settings.DATABASE_URL)
+client: MongoClient = None
+db = None
 
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
+def connect_to_mongo():
+    global client, db
+    client = MongoClient(settings.DATABASE_URL)
+    db = client.get_database(settings.DATABASE_NAME) # Specify database name
 
-def get_session():
-    with Session(engine) as session:
-        yield session
+def close_mongo_connection():
+    global client
+    if client:
+        client.close()
+
+def get_mongo_db():
+    return db

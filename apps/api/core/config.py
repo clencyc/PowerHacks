@@ -2,7 +2,8 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "SafeSpace AI API"
-    DATABASE_URL: str = "postgresql://user:password@localhost/safespace_db"
+    DATABASE_URL: str
+    DATABASE_NAME: str = "safespace_db"
     SECRET_KEY: str = "supersecretkey"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
