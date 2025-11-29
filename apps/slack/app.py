@@ -42,11 +42,7 @@ app = App(
     signing_secret=slack_signing_secret,
     # Explicitly disable OAuth for single workspace mode
     installation_store=None,
-    authorize=None,
-    # Remove any OAuth settings
-    client_id=None,
-    client_secret=None,
-    oauth_settings=None
+    authorize=None
 )
 
 # API endpoint for reports
