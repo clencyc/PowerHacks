@@ -1,14 +1,23 @@
+# ──────────────────────────────────────────────────────────────
+# SafeSpace AI Slack Bot — Flask + HTTP Events API Mode
+# ──────────────────────────────────────────────────────────────
+
+from slack_bolt import App
+from slack_bolt.adapter.flask import SlackRequestHandler
+from flask import Flask, request
 import os
 import json
 import logging
 from datetime import datetime
-from slack_bolt import App
-from slack_bolt.adapter.socket_mode import SocketModeHandler
 from dotenv import load_dotenv
+import requests
+from cryptography.fernet import Fernet
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+load_dotenv()
 
 try:
     # Try to use full detector with ML models
@@ -18,18 +27,13 @@ except ImportError as e:
     # Fallback to lightweight detector
     logger.warning(f"ML libraries not available ({e}), using lightweight detector")
     from detection_lite import detector
+
 from rag import rag_service
-import requests
-from cryptography.fernet import Fernet
 
-load_dotenv()
-
+# ── CORRECT SLACK APP CONFIGURATION FOR HTTP MODE ──
 app = App(
-    token=os.environ.get("SLACK_BOT_TOKEN"),
-    signing_secret=os.environ.get("SLACK_SIGNING_SECRET"),
-    # Use HTTP mode instead of Socket Mode for production
-    process_before_response=True
-    ignore_authorize_error=True
+    token=os.environ["SLACK_BOT_TOKEN"],
+    signing_secret=os.environ["SLACK_SIGNING_SECRET"],
 )
 
 # API endpoint for reports
@@ -589,42 +593,31 @@ def handle_app_mention(event, say):
         logger.error(f"Error handling app mention: {e}")
         say("I'm having trouble right now. Please use `/gbv-help` or call 0709 558 000 for immediate support.")
 
+# ── FLASK APP SETUP ──
+flask_app = Flask(__name__)
+handler = SlackRequestHandler(app)
+
+# Health check endpoints
+@flask_app.route("/")
+def health():
+    return {
+        "status": "healthy",
+        "service": "SafeSpace AI Slack Bot",
+        "timestamp": datetime.now().isoformat()
+    }
+
+@flask_app.route("/health")
+def health_check():
+    return {"status": "ok", "bot": "running"}
+
+# Slack events endpoint
+@flask_app.route("/slack/events", methods=["GET", "POST"])
+def slack_events():
+    return handler.handle(request)
+
+# ── All your existing @app.event, @app.command, etc. are already registered above ──
+
 if __name__ == "__main__":
-    import threading
-    from flask import Flask
-    
-    # Create Flask app for health checks
-    flask_app = Flask(__name__)
-    
-    @flask_app.route('/')
-    def health_check():
-        return {
-            "status": "healthy",
-            "service": "SafeSpace AI Slack Bot",
-            "timestamp": datetime.now().isoformat()
-        }
-    
-    @flask_app.route('/health')
-    def health():
-        return {"status": "ok", "bot": "running"}
-    
-    try:
-        # Add Slack routes to Flask app
-        @flask_app.route("/slack/events", methods=["POST"])
-        def slack_events():
-            from slack_bolt.adapter.flask import SlackRequestHandler
-            from flask import request
-            handler = SlackRequestHandler(app)
-            return handler.handle(request)
-        
-        logger.info("🚀 SafeSpace AI Slack Bot configured for HTTP mode")
-        
-        # Start Flask server on the port Render expects
-        port = int(os.environ.get("PORT", 10000))
-        logger.info(f"🌐 Starting web server on port {port}")
-        flask_app.run(host="0.0.0.0", port=port, debug=False)
-        
-    except KeyboardInterrupt:
-        logger.info("👋 SafeSpace AI Slack Bot stopping...")
-    except Exception as e:
-        logger.error(f"Failed to start services: {e}")
+    port = int(os.environ.get("PORT", 10000))
+    logger.info(f"🚀 Starting SafeSpace AI Slack Bot on port {port}")
+    flask_app.run(host="0.0.0.0", port=port, debug=False)
