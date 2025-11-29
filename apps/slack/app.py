@@ -41,21 +41,43 @@ def handle_message_events(event, client):
     text = event.get("text", "")
     if len(text.strip()) < 3:
         return
-        
+# ——— SLASH COMMANDS (this is what was missing) ——————————
 @app.command("/gbv-help")
-def handle_gbv_help_command(ack, respond, command):
+def handle_gbv_help(ack, respond):
     ack()
-    respond("SafeSpaceAI is here to help with GBV resources in the workplace.")
-
-@app.command("/gbv-report")
-def handle_gbv_report_command(ack, body, client):
-    ack()
+    respond({
+        "response_type": "ephemeral",
+        "text": "SafeSpaceAI is here to help with GBV resources in the workplace.\nType a question or use /gbv-report for anonymous reporting."
+    })
 
 @app.command("/gbv-privacy")
 def handle_privacy_command(ack, respond):
     ack()
-    respond("Your privacy is protected. Reports are encrypted and anonymous.")
+    respond({
+        "response_type": "ephemeral",
+        "text": "Your privacy is 100% protected. Reports are encrypted and anonymous. No personal data is stored."
+    })
 
+@app.command("/gbv-report")
+def handle_gbv_report(ack, body, client):
+    ack()
+    client.views_open(
+        trigger_id=body["trigger_id"],
+        view={
+            "type": "modal",
+            "callback_id": "submit_report",
+            "title": {"type": "plain_text", "text": "Anonymous Report"},
+            "submit": {"type": "plain_text", "text": "Submit Securely"},
+            "blocks": [
+                {"type": "section", "text": {"type": "mrkdwn", "text": "This report is completely anonymous and encrypted."}},
+                {"type": "input", "element": {"type": "plain_text_input", "action_id": "desc"}, "label": {"type": "plain_text", "text": "Description"}},
+                {"type": "input", "element": {"type": "static_select", "placeholder": {"type": "plain_text", "text": "Type"}, "options": [
+                    {"text": {"type": "plain_text", "text": "Sexual Harassment"}, "value": "sexual"},
+                    {"text": {"type": "plain_text", "text": "Other"}, "value": "other"}
+                ]}, "label": {"type": "plain_text", "text": "Incident type"}}
+            ]
+        }
+    )
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
