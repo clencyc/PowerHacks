@@ -47,6 +47,8 @@ services:
   - type: worker
     name: safespace-slack-bot
     env: python
+    region: oregon
+    plan: free
     buildCommand: cd apps/slack && pip install -r requirements.txt
     startCommand: cd apps/slack && python app.py
     envVars:
@@ -56,6 +58,11 @@ services:
         sync: false
       - key: SLACK_SIGNING_SECRET
         sync: false
+      - key: REPORT_ENCRYPTION_KEY
+        fromService:
+          name: safespace-api
+          type: web
+          envVarKey: REPORT_ENCRYPTION_KEY
       - key: GEMINI_API_KEY
         sync: false
       - key: PERSPECTIVE_API_KEY
