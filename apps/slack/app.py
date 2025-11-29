@@ -30,19 +30,16 @@ except ImportError as e:
 
 from rag import rag_service
 
-# ── CORRECT SLACK APP CONFIGURATION FOR HTTP MODE ──
-# Remove OAuth/Client credentials that cause multi-workspace mode
+# ── SIMPLEST SLACK APP CONFIGURATION FOR SINGLE WORKSPACE ──
 slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
 slack_signing_secret = os.environ["SLACK_SIGNING_SECRET"]
 
 logger.info(f"🔧 Configuring Slack app with token: {slack_bot_token[:12]}...")
 
+# Most basic configuration - no OAuth at all
 app = App(
     token=slack_bot_token,
-    signing_secret=slack_signing_secret,
-    # Explicitly disable OAuth for single workspace mode
-    installation_store=None,
-    authorize=None
+    signing_secret=slack_signing_secret
 )
 
 # API endpoint for reports
